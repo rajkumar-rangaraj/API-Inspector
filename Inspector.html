@@ -1,0 +1,868 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">    
+</head>
+
+<body>
+    <div id="one"></div>
+    <header class="header-basic fixed-top">
+        <div class="header-limiter">
+            <h1><a>API Inspector </a><span>Parser</span></h1>
+            <nav>
+                <a href="mailto:rajrang@microsoft.com,mofasiul@microsoft.com?Subject=API Inspector Parser">Contact</a>
+            </nav>
+        </div>
+
+    </header>
+    <div class="container">
+        <div class="panel-group">
+            <!--Input start-->
+            <div class="panel panel-primary" id="panelInputJSon">
+                <div class="panel-heading">Input JSON</div>
+                <div class="panel-body">
+
+                    <ul id="inputTabs" class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#raw">Raw JSON</a></li>
+                        <li><a data-toggle="tab" href="#uri">Trace URI</a></li>
+                    </ul>
+
+                    <div id="inputContent" class="tab-content">
+
+                        <div id="raw" class="tab-pane fade in active">
+                            <br />
+                            <textarea id="rawJSONInput"></textarea>
+                        </div>
+
+                        <div id="uri" class="tab-pane fade">
+                            <br />
+                            <input id="uriJson" type="url" class="form-control" name="jsonurl" title="Enter URL" style="color:#888;"
+                                   value="Enter APIM Trace URL" onfocus="inputFocus(this)" onblur="inputBlur(this)">
+                        </div>
+                        <br />
+                        <button id="btnSubmit" class="btn btn-primary">Parse</button>
+                        <button id="btnClear" class="btn btn-primary">Clear</button>
+                    </div>
+
+                    <div id="showPanel">
+                        <button id="btnShow" class="btn btn-primary">Show Input</button> <br /><br />
+                        <div class="panel panel-primary">
+                            <div class="panel-body funkyradio">
+                                <div class="funkyradio-success  col-md-2">
+                                    <input type="checkbox" name="checkbox" id="chkSummary" checked />
+                                    <label for="chkSummary">Summary</label>
+                                </div>
+                                <div class="funkyradio-primary  col-md-2">
+                                    <input type="checkbox" name="checkbox" id="chkInbound" checked />
+                                    <label for="chkInbound">Inbound</label>
+                                </div>
+                                <div class="funkyradio-info col-md-2">
+                                    <input type="checkbox" name="checkbox" id="chkBackend" checked />
+                                    <label for="chkBackend">Backend</label>
+                                </div>
+                                <div class="funkyradio-default  col-md-2">
+                                    <input type="checkbox" name="checkbox" id="chkOutbound" checked />
+                                    <label for="chkOutbound">OutBound</label>
+                                </div>
+                                <div class="funkyradio-danger  col-md-2">
+                                    <input type="checkbox" name="checkbox" id="chkError" checked />
+                                    <label for="chkError">Error</label>
+                                </div>
+                                <div class="funkyradio-warning  col-md-2">
+                                    <input type="checkbox" name="checkbox" id="chkAll" checked />
+                                    <label for="chkAll">Select All</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--Input end-->
+
+            <br />
+            <script id="TraceTemplate" type="text/x-jquery-tmpl">
+
+                <!--Summary start-->
+                <div id="pnlSummary" class="panel panel-primary">
+                    <div class="panel-heading"><b>Summary</b></div>
+
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <b>URL</b>: ${traceEntries.inbound[0].data.request.url} <br />
+                                <b>Status Code</b>: <span id="statusCode"></span><br />
+
+                                {{if traceEntries.backend}}
+
+                                {{if traceEntries.backend[1]}}
+
+                                {{if traceEntries.backend[1].data.response}}
+
+                                {{if helpers.status(traceEntries.backend[1].data.response.status.code)}} <!-- Placing it inside if condition so that it will ignore return value -->
+                                {{/if}}
+
+                                {{else}}
+
+                                {{if helpers.status("Error")}} <!-- Placing it inside if condition so that it will ignore return value -->
+                                {{/if}}
+
+                                {{/if}}
+
+                                {{/if}}
+
+                                {{/if}}
+                                <b>Trace Id</b>: ${traceId} <br />
+                                <b>Version</b>: ${traceEntries.inbound[1].data.configuration.api.version} <br />
+                                <b>Revision</b>: ${traceEntries.inbound[1].data.configuration.api.revision} <br />
+                                <b>Total TimeTaken</b>: <span id="overAllTime"></span><br />
+                            </div>
+                            <div class="col-md-4">
+                                <b>Operation</b>: ${traceEntries.inbound[1].data.configuration.operation.method} ${traceEntries.inbound[1].data.configuration.operation.uriTemplate} <br />
+                                <b>Product</b>: ${traceEntries.inbound[1].data.configuration.product.id} <br />
+                                <b>API</b>: ${traceEntries.inbound[1].data.configuration.api.from} <br />
+                                <b>User Id</b>: ${traceEntries.inbound[1].data.configuration.user.id} <br />
+                                <b>User Groups</b>:
+                                {{each traceEntries.inbound[1].data.configuration.user.groups}}
+                                {{if $index != 0}}
+                                <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;
+                                {{/if}}
+                                ${$value}
+                                {{/each}}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--Summary end-->
+                <!--<br />-->                
+                <!--inbound start-->
+                <div class="panel panel-primary" id="pnlInbound">
+                    <div class="panel-heading">
+                        <b>Inbound</b>
+                        <span id="inboundTime" style="float:right;font-weight:bold"></span>
+                    </div>
+                    <div class="panel-body">
+                        {{each traceEntries.inbound}}
+                        {{if $index == 0}}
+                        <b> ${$value.data.request.method}  ${$value.data.request.url}</b> <br /><br />
+                        <b><u>Request Headers</u></b><br /><br />
+                        {{each $value.data.request.headers}}
+                        <b>${$value.name}</b>: ${$value.value}<br />
+                        {{/each}}
+                        <b>TimeTaken:</b> ${ helpers.TimeTaken(traceEntries.inbound[0].elapsed) } 
+
+                        {{if traceEntries.inbound[2]}}
+                        <table class="table">
+                            {{tmpl "#RowHeader"}}
+                            <tbody>
+                                {{/if}}
+                                {{/if}}
+
+                                {{if $index == 1}}
+                                {{if helpers.TimeTaken(traceEntries.inbound[1].elapsed)}} <!-- Placing it inside if condition so that it will ignore return value -->
+                                {{/if}}
+                                {{/if}}
+                                {{if $index >= 2}}
+                                {{tmpl($value) "#RowTemplate"}}
+                                {{/if}}
+
+                                {{/each}}
+
+                                {{if traceEntries.inbound[2]}}
+                            </tbody>
+                        </table>
+                        {{/if}}
+                    </div>
+                </div>
+                {{if helpers.TempStorElapsed("IB")}} <!-- Placing it inside if condition so that it will ignore return value -->
+                {{/if}}
+                <!--inbound end-->
+
+                <!--backend start-->
+                {{if traceEntries.backend}}
+                <!--<br />-->
+                <div class="panel panel-primary" id="pnlBackend">
+                    <div class="panel-heading">
+                        <b>Backend</b>
+                        <span id="backendTime" style="float:right;font-weight:bold"></span>
+                    </div>
+                    <div class="panel-body">
+
+                        {{if traceEntries.backend[0].data.request }}
+
+                        {{each traceEntries.backend}}
+                        {{if $index == 0}}
+
+                        <b>${$value.data.request.method}  ${$value.data.request.url}</b> <br /> <br />
+                        <b><u>Request Headers</u></b><br /><br />
+                        {{each $value.data.request.headers}}
+                        <b>${$value.name}</b> : ${$value.value} <br />
+                        {{/each}}
+                        <b>TimeTaken:</b> ${ helpers.TimeTaken(traceEntries.backend[0].elapsed) } 
+                        
+                        {{/if}}
+
+
+                        {{if $index >= 1}}
+
+                        {{if $value.data.response}}
+                        <br /><br /> <b><u>Response Headers</u></b><br /><br />
+                        <b>Status</b>: ${$value.data.response.status.code}  ${$value.data.response.status.reason} <br />
+                        {{each $value.data.response.headers}}
+                        <b>${$value.name}</b>: ${$value.value} <br />
+                        {{/each}}
+                        <b>TimeTaken:</b> ${ helpers.TimeTaken(traceEntries.backend[1].elapsed) } 
+                        {{/if}}
+
+                        {{if ($index == 2 && traceEntries.backend[1].data.response) || ($index == 1 && ($value.data.message || $value.data.messages))}}
+                        <br />
+                        <table class="table">
+                            {{tmpl "#RowHeader"}}
+                            <tbody>
+                                {{/if}}
+
+                                {{if ($value.data || $value.data.message || $value.data.messages) && !($index == 1 && traceEntries.backend[1].data.response) }}
+                                {{tmpl($value) "#RowTemplate"}}
+                                {{/if}}
+
+                                {{/if}}
+
+
+                                {{/each}}
+                                {{if traceEntries.backend[1].data.message || traceEntries.backend[2] || traceEntries.backend[1].data.messages}}
+                            </tbody>
+                        </table>
+                        {{/if}}
+
+                        {{else}}
+
+                        <table class="table">
+                            {{tmpl "#RowHeader"}}
+                            <tbody>
+                                {{each traceEntries.backend}}
+                                {{tmpl($value) "#RowTemplate"}}
+                                {{/each}}
+                            </tbody>
+                        </table>
+
+                        {{/if}}
+                    </div>
+                </div>
+                {{if helpers.TempStorElapsed("BE")}} <!-- Placing it inside if condition so that it will ignore return value -->
+                {{/if}}
+                {{/if}}
+
+
+                <!--backend end-->
+
+                <!--Error start-->
+                {{if traceEntries.onerror}}
+                <!--<br />-->
+                <div class="panel panel-danger" id="pnlError">
+                    <div class="panel-heading">
+                    <b>Error</b>
+                        <span id="errorTime" style="float:right;font-weight:bold"></span>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table">
+                            {{tmpl "#RowHeader"}}
+                            <tbody>
+                                {{each traceEntries.onerror}}
+                                {{tmpl($value) "#RowTemplate"}}
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {{if helpers.TempStorElapsed("ERR")}} <!-- Placing it inside if condition so that it will ignore return value -->
+                {{/if}}
+                {{/if}}
+
+
+                <!--Error end-->
+
+                <!--<br />-->
+                <!--outbound start-->
+                <div class="panel panel-primary" id="pnlOutbound">
+                    <div class="panel-heading">
+                    <b>Outbound</b>
+                        <span id="outboundTime" style="float:right;font-weight:bold"></span>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table">
+                            {{tmpl "#RowHeader"}}
+                            <tbody>
+                                {{each traceEntries.outbound}}
+                                {{tmpl($value) "#RowTemplate"}}
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{if helpers.TempStorElapsed("OB")}} <!-- Placing it inside if condition so that it will ignore return value -->
+                {{/if}}
+                <!--outbound end-->
+                
+            </script>
+
+            <!--All data gets rendered inside this div-->
+            <div id="TraceSummary">
+
+            </div>
+        </div>
+
+    </div>
+
+    <script id="RowHeader" type="text/x-jquery-tmpl">
+        <thead>
+            <tr>
+                <th class="col-md-2">Source</th>
+                <th class="col-md-2">TimeTaken</th>
+                <th class="col-md-8">Data</th>
+            </tr>
+        </thead>
+    </script>
+
+    <script id="RowTemplate" type="text/x-jquery-tmpl">
+        <tr>
+            {{each(ParentKey, ParentValue)  $data}}
+
+            {{if ParentKey != "timestamp"}}
+
+            {{if !helpers.IsObject(ParentValue)}}
+            <td>              
+                {{if ParentKey == "elapsed" }}
+                ${ helpers.TimeTaken(ParentValue) }
+                {{else}}
+                ${ParentValue}
+                {{/if}}
+            </td>
+            {{/if}}
+            {{/if}}
+
+            {{if helpers.IsObject(ParentValue)}}
+            <td>
+                {{if ParentKey == "headers"}}
+                <b><u>Headers</u></b><br />
+                {{/if}}
+
+                {{each(childoneKey, childoneValue) ParentValue}}
+                {{if helpers.IsObject(childoneValue)}}
+
+                {{if childoneKey == "headers"}}
+                <b><u>Headers</u></b><br />
+                {{/if}}
+
+                {{each(childtwoKey, childtwoValue) childoneValue}}
+                {{if helpers.IsObject(childtwoValue)}}
+
+                {{if childtwoKey == "headers"}}
+                <b><u>Headers</u></b><br />
+                {{/if}}
+
+                {{each(childthreeKey, childthreeValue) childtwoValue}}
+
+                {{if helpers.IsObject(childthreeValue)}}
+
+                {{if childthreeKey == "headers"}}
+                <b><u>Headers</u></b><br />
+                {{/if}}
+
+                {{each(childfourKey, childfourValue) childthreeValue}}
+
+                {{if childfourKey<=20 }}
+                ${childfourValue} <br />
+                {{else childfourKey == "name"}}
+                <b>${childfourValue}: </b>
+                {{else childfourKey == "value" }}
+                ${childfourValue} <br />
+                {{else}}
+                <b>${childfourKey}: </b>${childfourValue} <br />
+                {{/if}}
+                {{/each}}
+                {{else}}
+
+                {{if childthreeKey<=20 }}
+                ${childthreeValue} <br />
+                {{else childthreeKey == "name"}}
+                <b>${childthreeValue}: </b>
+                {{else childthreeKey == "value" }}
+                ${childthreeValue}<br />
+                {{else}}
+                <b>${childthreeKey}: </b>${childthreeValue} <br />
+                {{/if}}
+
+                {{/if}}
+
+                {{/each}}
+                {{else}}
+
+                {{if childtwoKey<=20 }}
+                ${childtwoValue} <br />
+                {{else childtwoKey == "name"}}
+                <b>${childtwoValue}: </b>
+                {{if helpers.IsHeader(childtwoKey)}} <!-- Placing it inside if so that it will ignore return value -->
+                {{/if}}
+                {{else childtwoKey == "value" }}
+
+                {{if helpers.IsHeader(childtwoKey)}}
+                ${childtwoValue}<br />
+                {{else}}
+                <b>${childtwoKey}: </b>${childtwoValue}<br />
+                {{/if}}
+
+                {{else}}
+                <b>${childtwoKey}: </b> ${childtwoValue} <br />
+                {{/if}}
+
+                {{/if}}
+                {{/each}}
+                {{else}}
+
+                {{if childoneKey<=20}}
+                ${childoneValue} <br />
+                {{else childoneKey == "name"}}
+                <b>${childoneValue}: </b>
+                {{if helpers.IsHeader(childoneKey)}} <!-- Placing it inside if so that it will ignore return value -->
+                {{/if}}
+                {{else childoneKey == "value" }}
+
+                {{if helpers.IsHeader(childoneKey)}}
+                ${childoneValue}<br />
+                {{else}}
+                <b>${childoneKey}: </b>${childoneValue}<br />
+                {{/if}}
+
+                {{else}}
+                <b>${childoneKey}: </b> ${childoneValue} <br />
+                {{/if}}
+
+                {{/if}}
+                {{/each}}
+            </td>
+            {{/if}}
+
+            {{/each}}
+        </tr>
+    </script>
+
+    <script>
+
+        var temp = "";
+        var bound = "";
+        var tempDate = "";
+        var previousElapsed = "";
+        
+        var lastIBTimestamp = "";
+        var lastBETimestamp = "";
+        var lastErrTimestamp = "";
+        var lastOBTimestamp = "";
+
+        var startIBTimestamp = "";
+        var startBETimestamp = "";
+        var startErrTimestamp = "";
+        var startOBTimestamp = "";
+
+        var IBElapsed = "";
+        var BEElapsed = "";
+        var ErrElapsed = "";
+        var OBElapsed = "";
+
+        var statusCode = "";
+
+        var helpers = {
+            IsObject: function (i) {
+                if (typeof i == 'object') {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            },
+            IsHeader: function (str) {
+                if (str == 'name') {
+                    temp = "name";
+                    return true;
+                }
+                else if (str == 'value') {
+                    if (temp == 'name') {
+                        temp = "";
+                        return true;
+                    }
+                    temp = "nothing";
+                    return false;
+                }
+            },
+            TimeTaken: function (elapsed) {
+                var currentDate = new Date("01-01-9999 " + elapsed);
+                var previousDate;
+
+                var temp;
+                var text = "ms";
+                var p_hours = 0;
+                var p_minutes = 0;
+                var p_seconds = 0;
+                var p_milliseconds = 0;
+
+
+                var c_hours = currentDate.getHours();
+                var c_minutes = currentDate.getMinutes();
+                var c_seconds = currentDate.getSeconds();
+                //var c_milliseconds = currentDate.getMilliseconds();
+                var c_milliseconds = parseInt(elapsed.split(".")[1]);
+
+                if (previousElapsed != "") {
+                    previousDate = new Date("01-01-9999 " + previousElapsed); 
+                    p_hours = previousDate.getHours();
+                    p_minutes = previousDate.getMinutes();
+                    p_seconds = previousDate.getSeconds();
+                    //p_milliseconds = previousElapsed.getMilliseconds();
+                    p_milliseconds = parseInt(previousElapsed.split(".")[1]);
+                    previousElapsed = elapsed;
+                }
+                else {
+                    previousElapsed = elapsed;
+                }
+
+                var d_seconds = 0;
+                var d_milliseconds = 0;
+                var d_minutes = c_minutes > p_minutes ? c_minutes - p_minutes : 0;
+
+                if (c_seconds > p_seconds) {
+                    d_seconds = c_seconds - p_seconds;
+                }
+                else if (p_seconds > c_seconds) {
+                    d_seconds = (60 - p_seconds) + c_seconds;
+                    d_minutes = d_minutes - 1;
+                }
+
+                if (c_milliseconds > p_milliseconds) {
+                    d_milliseconds = (c_milliseconds) - (p_milliseconds);
+                }
+                else if (p_milliseconds > c_milliseconds) {
+                    d_milliseconds = (10000000 - p_milliseconds) + c_milliseconds; 
+                    d_seconds = d_seconds - 1;
+                }
+             
+                var displaytime = (Math.round(parseFloat(d_milliseconds / 10000) * 1000) / 1000).toString();
+
+
+                if (d_seconds >= 1 || d_minutes >= 1) {
+                    displaytime = displaytime.split(".")[0];
+                    if (displaytime.length < 3) displaytime = helpers.pad(displaytime, 3);
+                }
+
+                if (d_seconds > 0) {
+                    if (d_seconds == 1) { text = "sec"; } else {
+                        text = "secs";
+                    }
+                    displaytime = d_seconds.toString() + "." + displaytime;
+                }
+                if (d_minutes > 0) {
+                    if (d_minutes == 1) { temp = " min "; } else {
+                        temp = " mins ";
+                    }
+                    displaytime = d_minutes.toString() + temp + displaytime;
+                }
+
+                displaytime = displaytime + " " + text;
+                return displaytime;
+            },
+            TempStorElapsed: function (strbound) {
+                if (strbound == "IB") {
+                    IBElapsed = previousElapsed;
+                }
+                else if (strbound == "BE") {
+                    BEElapsed = previousElapsed;
+                }
+                else if (strbound == "ERR") {
+                    ErrElapsed = previousElapsed;
+                }
+                else if (strbound == "OB") {
+                    OBElapsed = previousElapsed;
+                }
+            },
+            LastTimeStamp: function (dtTime, elapsed, strSorL, strbound) {
+                if (strbound == "") {
+                    strbound = bound;
+                }
+
+                if (strbound == "IB") {
+                    strSorL == "S" ? startIBTimestamp = dtTime : lastIBTimestamp = dtTime;
+                    IBElapsed = elapsed;
+                }
+                else if (strbound == "BE"){
+                    strSorL == "S" ? startBETimestamp = dtTime : lastBETimestamp = dtTime;
+                    BEElapsed = elapsed;
+                }
+                else if (strbound == "ERR"){
+                    strSorL == "S" ? startErrTimestamp = dtTime : lastErrTimestamp = dtTime;
+                    ErrElapsed = elapsed;
+                }
+                else if (strbound == "OB") {
+                    strSorL == "S" ? startOBTimestamp = dtTime : lastOBTimestamp = dtTime;
+                    OBElapsed = elapsed;
+                }
+
+                if (strSorL == "S") bound = strbound;
+                
+                return false;
+            },
+            pad: function (str, num) {
+                str = str.toString();
+                return str.length < num ? helpers.pad("0" + str, num) : str;
+            },
+            status: function (str) {
+                statusCode = str;
+            }
+        };
+
+
+        function inputFocus(i) {
+            if (i.value == i.defaultValue) { i.value = ""; i.style.color = "#000"; }
+        }
+        function inputBlur(i) {
+            if (i.value == "") { i.value = i.defaultValue; i.style.color = "#888"; }
+        }
+
+        function selectAllCheck() {
+            if ($('#chkSummary').prop('checked') && $('#chkInbound').prop('checked') &&
+                ($('#chkBackend').prop('checked') || $('#chkBackend').attr('disabled')) && $('#chkOutbound').prop('checked') &&
+                ($('#chkError').prop('checked') || $('#chkError').attr('disabled'))) {
+                $("#chkAll").prop('checked', true);
+            }
+            else if (!$('#chkSummary').prop('checked') || !$('#chkInbound').prop('checked') ||
+                !$('#chkBackend').prop('checked') || !$('#chkOutbound').prop('checked') ||
+                !$('#chkError').prop('checked')) {
+                $("#chkAll").prop('checked', false);
+            }
+        }
+
+        $(document).ready(function () {
+            
+            $("#showPanel").hide();
+
+            $("#btnSubmit").click(function () {
+                
+                var txtinput = "";
+                resetData();
+
+                var ctrl = $('ul#inputTabs li.active');
+
+                if (ctrl.find('a').attr('href') != '#raw') {
+                    if ($.trim($('#uriJson').val())) {
+                        $.ajax({
+                            url: $.trim($('#uriJson').val()), //"https://apimgmtstkq8nfa86350kgv5.blob.core.windows.net/apiinspectorcontainer/BSx67R0E0QNGb2MoEbaYTg2-1?sv=2015-07-08&sr=b&sig=HcuJHbLmCCG7UhsNyM84TizS3RRkrtZxs5tOxTgpBbs%3D&se=2018-01-05T14%3A02%3A21Z&sp=r&traceId=3bc6eb781201470199c624d2973d33d3", 
+                            type: 'GET',
+                            crossDomain: true,
+                            async: false,
+                            success: function (result) { txtinput = JSON.stringify(result); },
+                            error: function () {
+                                alert('Enter a valid URL!');
+                            },
+                        });
+                    }
+                }
+                else {
+                    if ($.trim($('textarea').val())) {
+                        txtinput = $('textarea').val().replace('on-error', 'onerror');
+                    }
+                }
+
+                if (txtinput != "") {
+                    $("#TraceSummary").empty();
+                    var jsoninput = $.parseJSON(txtinput);
+
+                    $("#TraceTemplate").tmpl(jsoninput)
+                        .appendTo("#TraceSummary");
+
+                    if (statusCode != "")
+                        $("#statusCode").text(statusCode);
+                    else if (ErrElapsed != "") {
+                        $("#statusCode").text("Error");
+                    }
+
+                    if (IBElapsed != "") {
+                        previousElapsed = "";
+                        $("#inboundTime").text(helpers.TimeTaken(IBElapsed));
+                    }
+
+                    if (BEElapsed != "") {
+                        previousElapsed = IBElapsed;
+                        $("#backendTime").text(helpers.TimeTaken(BEElapsed));
+                    }
+                    else
+                    {
+                        $("#chkBackend").attr('disabled', true);
+                        $("#chkBackend").prop('checked', false);
+                        BEElapsed = IBElapsed;
+                    }
+
+                    if (ErrElapsed != "") {
+                        previousElapsed = BEElapsed;
+                        $("#errorTime").text(helpers.TimeTaken(ErrElapsed));
+                    }
+                    else {
+                        $("#chkError").attr('disabled', true);
+                        $("#chkError").prop('checked', false);
+                        ErrElapsed = BEElapsed;
+                    }
+
+                    if (OBElapsed != "") {
+                        previousElapsed = ErrElapsed;
+                        $("#outboundTime").text(helpers.TimeTaken(OBElapsed));
+                    }
+
+                    previousElapsed = ""
+
+                    $("#overAllTime").text(helpers.TimeTaken(OBElapsed));
+
+                    $("#inputContent").hide();
+                    $("#inputTabs").hide();
+                    $("#showPanel").show();
+                    $("#pnlInbound").show();
+                    $("#pnlBackend").show();
+                    $("#pnlOutbound").show();
+                    $("#pnlError").show();
+                    $("#pnlSummary").show();
+                }
+            });
+
+            $("#btnShow").click(function () {
+                $("#inputContent").show();
+                $("#inputTabs").show();
+                $("#showPanel").hide();
+            });
+
+            $('#chkInbound').change(function () {
+                selectAllCheck();
+                if (this.checked) {
+                    $("#pnlInbound").show();
+                }
+                else {
+                    $("#pnlInbound").hide();
+                }
+            });
+
+            $('#chkBackend').change(function () {
+                selectAllCheck();
+                if (this.checked) {
+                    $("#pnlBackend").show();
+                }
+                else {
+                    $("#pnlBackend").hide();
+                }
+            });
+
+            $('#chkOutbound').change(function () {
+                selectAllCheck();
+                if (this.checked) {
+                    $("#pnlOutbound").show();
+                }
+                else {
+                    $("#pnlOutbound").hide();
+                }
+            });
+
+            $('#chkError').change(function () {
+                selectAllCheck();
+                if (this.checked) {
+                    $("#pnlError").show();
+                }
+                else {
+                    $("#pnlError").hide();
+                }
+            });
+
+            $('#chkSummary').change(function () {
+                selectAllCheck();
+                if (this.checked) {
+                    $("#pnlSummary").show();
+                }
+                else {
+                    $("#pnlSummary").hide();
+                }
+            });
+
+            $('#chkAll').change(function () {
+                if (this.checked) {
+                    $("#chkSummary").prop('checked', true);
+                    $("#chkInbound").prop('checked', true);
+                    $("#chkBackend").prop('checked', true);
+                    $("#chkOutbound").prop('checked', true);
+                    $("#chkError").prop('checked', true);
+                    $("#pnlInbound").show();
+                    $("#pnlBackend").show();
+                    $("#pnlOutbound").show();
+                    $("#pnlError").show();
+                    $("#pnlSummary").show();
+
+                    if ($('#chkBackend').attr('disabled')) {
+                        $("#chkBackend").prop('checked', false);
+                    }
+                    if ($('#chkError').attr('disabled')) {
+                        $("#chkError").prop('checked', false);
+                    }
+
+                }
+                else {
+                    $("#chkSummary").prop('checked', false);
+                    $("#chkInbound").prop('checked', false);
+                    $("#chkBackend").prop('checked', false);
+                    $("#chkOutbound").prop('checked', false);
+                    $("#chkError").prop('checked', false);
+                    $("#pnlInbound").hide();
+                    $("#pnlBackend").hide();
+                    $("#pnlOutbound").hide();
+                    $("#pnlError").hide();
+                    $("#pnlSummary").hide();
+                }
+            });
+
+
+            $("#btnClear").click(function () {
+                var ctrl = $("ul#inputTabs li.active");
+                if (ctrl.find("a").attr('href') == "#raw") {
+                    $("#rawJSONInput").val("");
+                    $("#rawJSONInput").focus();
+                }
+                else {
+                    $("#uriJson").val("");
+                    $("#uriJson").focus();
+                }
+
+                $("#pnlInbound").hide();
+                $("#pnlBackend").hide();
+                $("#pnlOutbound").hide();
+                $("#pnlError").hide();
+                $("#pnlSummary").hide();
+            });
+
+            function resetData()
+            {
+                $("#chkError").attr('disabled', false);
+                $("#chkBackend").attr('disabled', false);
+
+                $("#chkSummary").prop('checked', true);
+                $("#chkInbound").prop('checked', true);
+                $("#chkBackend").prop('checked', true);
+                $("#chkOutbound").prop('checked', true);
+                $("#chkError").prop('checked', true);
+                $("#chkAll").prop('checked', true);
+                $("#statusCode").text("");
+
+                ErrElapsed = "";
+                BEElapsed = "";
+                previousElapsed = "";
+                statusCode = "";
+            }
+        });
+    </script>
+</body>
+
+</html>
